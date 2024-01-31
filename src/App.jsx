@@ -1,13 +1,27 @@
 import React from 'react';
-import { AppProvider } from './components/1-Budget';
+import { AppProvider } from './context/AppContext';
 
-function App() {
+import Budget from './components/1-Budget';
+import Remaining from './components/2-Remaining';
+import ExpenseTotal from './components/3-ExpenseTotal';
+import ExpenseList from './components/5-ExpenseList';
+
+const App = () => {
   return (
     <>
-      <h1 className='alert alert-primary'>hello world</h1>
-      {/* <AppProvider></AppProvider> */}
+      <div className='container text-center'>
+        <h1 className='alert alert-primary mt-4'>Budget Allocation</h1>
+        <AppProvider>
+          <div>
+            <Budget />
+            <Remaining />
+            <ExpenseTotal />
+            <ExpenseList />
+          </div>
+        </AppProvider>
+      </div>
     </>
   );
-}
+};
 
 export default App;
