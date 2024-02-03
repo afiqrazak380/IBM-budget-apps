@@ -4,11 +4,11 @@ import React, { createContext, useReducer } from 'react';
 const initialState = {
   budget: 2000,
   expenses: [
-    { id: 'Marketing', name: 'Marketing', cost: 0 },
-    { id: 'Finance', name: 'Finance', cost: 0 },
-    { id: 'Sales', name: 'Sales', cost: 0 },
-    { id: 'Human Resource', name: 'Human Resource', cost: 0 },
-    { id: 'IT', name: 'IT', cost: 0 },
+    { id: 'Marketing', name: 'Marketing', cost: 50 },
+    { id: 'Finance', name: 'Finance', cost: 300 },
+    { id: 'Sales', name: 'Sales', cost: 70 },
+    { id: 'Human Resource', name: 'Human Resource', cost: 40 },
+    { id: 'IT', name: 'IT', cost: 500 },
   ],
   currency: '£',
 };
@@ -22,79 +22,87 @@ export const AppReducer = (state, action) => {
   switch (action.type) {
     // #1
     case 'ADD_EXPENSES':
-      let totalBudget = 0;
+      const updatedExpense = state.expenses.map((currentExpense) => {
+        if (currentExpense.name === action.payload.name) {
+          const newCost = currentExpense.cost + action.payload.cost;
 
-      totalBudget = state.expenses.reduce((total, item) => {
-        return (total += item.cost);
-      }, 0);
-
-      totalBudget = totalBudget + action.payload.cost;
-
-      console.log(`total_budget: ${totalBudget}`);
-      console.log(`state_budget: ${state.budget}`);
-
-      if (totalBudget <= state.budget) {
-        totalBudget = 0;
-
-        state.expenses.map((currentExpense) => {
-          if (currentExpense.name === action.payload.name) {
-            currentExpense.cost = action.payload.cost + currentExpense.cost;
+          if (state.budget >= newCost) {
+            // Update the expense cost only if it doesnt exceed the budget
+            return { ...currentExpense, cost: newCost };
+          } else {
+            alert('Out of funds!!');
+            return currentExpense;
           }
-          return currentExpense;
-        });
-        return {
-          ...state,
-        };
-      } else {
-        alert('Out of funds!!');
-        return {
-          ...state,
-        };
-      }
+        }
+        return currentExpense;
+      });
+      return {
+        ...state,
+        expenses: updatedExpense,
+      };
 
     // #2
     case 'REDUCE_EXPENSE':
-      const reduceExpense = state.expenses.map((currentExpense) => {
-        if (
-          currentExpense.name === action.payload.name &&
-          currentExpense.cost - action.payload.cost >= 0
-        ) {
-          currentExpense.cost = currentExpense.cost - action.payload.cost;
-          budget = state.budget + action.payload.cost;
-        }
-        return currentExpense;
-      });
-      return {
-        ...state,
-        expenses: [...reduceExpense],
-      };
+      console.log('Reducing expense:', action.payload);
 
-    // #3
+      // Destructuring action.payload object
+      const { name, cost } = action.payload;
+
+      // Find the expense to reduce
+      const reducedExpenseIndex = state.expenses.findIndex(
+        (expense) => expense.name === name && expense.cost >= cost
+      );
+
+      if (reducedExpenseIndex !== -1) {
+        // Create a copy of expenses array to modify
+        const updatedExpenses = [...state.expenses];
+
+        //Update the expense and calculate new budget
+        updatedExpenses[reducedExpenseIndex] = {
+          ...updatedExpenses[reducedExpenseIndex],
+          cost: updatedExpenses[reducedExpenseIndex].cost - cost,
+        };
+
+        const updatedBudget = state.budget + cost;
+
+        // Retrun the updated state
+        return {
+          ...state,
+          expenses: updatedExpenses,
+          budget: updatedBudget,
+        };
+      }
+
+      console.error(`Unable to reduce expense form ${name} with cost ${cost}`);
+      return state;
+
     case 'DELETE_EXPENSE':
-      state.expenses.map((currentExpense) => {
+      const updatedExpenses = state.expenses.map((currentExpense) => {
         if (currentExpense.name === action.payload) {
-          budget = state.budget + currentExpense.cost;
-          currentExpense.cost = 0;
+          // Increment budget by the cost of the deleted expense
+          state.budget += currentExpense.cost;
+          // Reset the cost of the deleted expense to 0
+          return { ...currentExpense, cost: 0 };
         }
         return currentExpense;
       });
       return {
         ...state,
-        budget,
+        expenses: updatedExpenses,
       };
 
     // #4
     case 'SET_BUDGET':
-      state.budget = action.payload;
       return {
         ...state,
+        budget: action.payload,
       };
 
     // #5
     case 'CHG_CURRENCY':
-      state.currency = action.payload;
       return {
         ...state,
+        currency: action.payload,
       };
 
     // #6
